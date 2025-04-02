@@ -129,6 +129,10 @@ export class VectorDB {
     return true;
   }
 
+  getById(id: string): Document | undefined {
+    return this.documents.get(id);
+  }
+
   getAll(): Document[] {
     return Array.from(this.documents.values());
   }
