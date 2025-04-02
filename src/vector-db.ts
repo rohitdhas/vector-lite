@@ -38,7 +38,9 @@ export class VectorDB {
     const vector = doc.vector;
 
     if (!Array.isArray(vector) || vector.length !== this.vectorDim) {
-      throw new Error("Invalid vector length");
+      throw new Error(
+        `Invalid vector length, expected ${this.vectorDim} but got ${vector.length}`
+      );
     }
 
     const internalIndex = this.currentIndex++;
@@ -58,9 +60,15 @@ export class VectorDB {
     return id;
   }
 
-  search(query: Vector, topK = 5, filter?: Record<string, any>) {
-    const knn = this.index.searchKnn(query, topK * 3); // overfetch in case filtering reduces results
-    const results = [];
+  search(
+    query: Vector,
+    topK = 10,
+    filter?: Record<string, any>,
+    page = 1,
+    pageSize = 10
+  ) {
+    const knn = this.index.searchKnn(query, topK * 5);
+    const matches = [];
 
     for (let i = 0; i < knn.neighbors.length; i++) {
       const internalId = knn.neighbors[i];
@@ -72,15 +80,19 @@ export class VectorDB {
 
       if (filter && !matchesFilter(doc.metadata, filter)) continue;
 
-      results.push({
+      matches.push({
         doc,
         score: cosineSimilarity(query, doc.vector),
       });
-
-      if (results.length >= topK) break;
     }
 
-    return results.sort((a, b) => b.score - a.score);
+    const total = matches.length;
+    const start = (page - 1) * pageSize;
+    const paginated = matches
+      .sort((a, b) => b.score - a.score)
+      .slice(start, start + pageSize);
+
+    return { total, page, pageSize, results: paginated };
   }
 
   update(id: string, updated: Partial<Omit<Document, "id">>) {
