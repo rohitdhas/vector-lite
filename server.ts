@@ -86,6 +86,6 @@ app.get("/all", ((_req: Request, res: Response) => {
   res.json(db.getAll());
 }) as RequestHandler);
 
-app.listen(3000, () => {
-  console.log("🚀 VectorLite running at http://localhost:3000");
+app.listen(7123, () => {
+  console.log("🚀 VectorLite running at http://localhost:7123");
 });
