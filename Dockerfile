@@ -10,7 +10,6 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/config ./config
 
 # Install build dependencies and rebuild native modules
 RUN apt-get update && \
@@ -22,8 +21,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 ENV ENABLE_AUTH=true
-ENV CONFIG_PATH=/app/config/config.json
+ENV VECTOR_LITE_API_KEY=1234567890
 
-EXPOSE 3000
+EXPOSE 7123
 
 CMD ["node", "dist/server.js"]
