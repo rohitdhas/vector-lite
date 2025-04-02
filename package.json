@@ -12,5 +12,8 @@
   "devDependencies": {
     "@types/node": "^22.13.17",
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "hnswlib-node": "^3.0.0"
   }
 }
