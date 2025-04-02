@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { HierarchicalNSW } from "hnswlib-node";
 import { BinaryStorage } from "./binary-storage";
 import { matchesFilter } from "./utils/filter";
@@ -32,27 +33,29 @@ export class VectorDB {
     this.loadFromDisk();
   }
 
-  add(doc: Document) {
-    if (
-      !doc.id ||
-      !Array.isArray(doc.vector) ||
-      doc.vector.length !== this.vectorDim
-    ) {
-      throw new Error("Invalid document");
-    }
+  add(doc: Omit<Document, "id">) {
+    const id = randomUUID();
+    const vector = doc.vector;
 
-    if (this.documents.has(doc.id)) {
-      throw new Error(
-        `Document with id '${doc.id}' already exists. Use update() instead.`
-      );
+    if (!Array.isArray(vector) || vector.length !== this.vectorDim) {
+      throw new Error("Invalid vector length");
     }
 
     const internalIndex = this.currentIndex++;
-    this.documents.set(doc.id, doc);
-    this.index.addPoint(doc.vector, internalIndex);
-    this.idToIndex.set(doc.id, internalIndex);
-    this.indexToId.set(internalIndex, doc.id);
+
+    const fullDoc: Document = {
+      id,
+      vector,
+      metadata: doc.metadata,
+    };
+
+    this.documents.set(id, fullDoc);
+    this.index.addPoint(vector, internalIndex);
+    this.idToIndex.set(id, internalIndex);
+    this.indexToId.set(internalIndex, id);
+
     this.saveToDisk();
+    return id;
   }
 
   search(query: Vector, topK = 5, filter?: Record<string, any>) {
