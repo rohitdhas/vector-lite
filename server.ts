@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express, { Request, RequestHandler, Response } from "express";
 import morgan from "morgan";
 import * as yup from "yup";
+import { authMiddleware } from "./src/auth/middleware";
 import { VectorDB } from "./src/vector-db";
 
 dotenv.config();
@@ -11,15 +12,7 @@ const db = new VectorDB();
 
 app.use(express.json());
 app.use(morgan("dev"));
-
-const authenticate: RequestHandler = (req, res, next) => {
-  const token = req.headers.authorization?.split("Bearer ")[1];
-  if (token !== process.env.AUTH_TOKEN) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
-  next();
-};
+app.use(authMiddleware);
 
 // Validation Schemas
 const vectorSchema = yup
@@ -43,8 +36,6 @@ const searchSchema = yup.object({
   page: yup.number().default(1),
   pageSize: yup.number().default(10),
 });
-
-app.use(authenticate);
 
 app.post("/add", (async (req: Request, res: Response) => {
   try {
